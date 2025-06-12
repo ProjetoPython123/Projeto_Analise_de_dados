@@ -41,7 +41,7 @@ def main():
         # Check for preloaded data option first
         preloaded_success = render_preloaded_data_option()
         
-        if not preloaded_success:
+        if not preloaded_success and not st.session_state.analysis_complete:
             st.markdown("---")
             st.subheader("📁 Ou faça upload dos seus próprios arquivos:")
             uploaded_files = render_data_upload()
@@ -69,6 +69,17 @@ def main():
     
     # Main analysis section
     if st.session_state.analysis_complete and st.session_state.processed_data is not None:
+        # Button to return to data selection
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🔄 Selecionar Outros Dados", type="secondary", use_container_width=True):
+                st.session_state.analysis_complete = False
+                st.session_state.processed_data = None
+                st.session_state.data_processor = None
+                st.rerun()
+        
+        st.markdown("---")
+        
         # Sidebar for filters
         filters = render_sidebar(st.session_state.processed_data)
         

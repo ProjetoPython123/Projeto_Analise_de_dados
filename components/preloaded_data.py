@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import os
@@ -5,6 +6,10 @@ from utils.data_processor import DataProcessor
 
 def render_preloaded_data_option():
     """Render option to use preloaded data files"""
+    
+    # Don't show if data is already loaded
+    if st.session_state.get('analysis_complete', False):
+        return False
     
     # Check if sample files exist
     sample_files = {
@@ -32,7 +37,7 @@ def render_preloaded_data_option():
             if st.button("🚀 Usar Dados Disponíveis", type="primary"):
                 return load_preloaded_data(sample_files)
     
-    return None
+    return False
 
 def load_preloaded_data(file_paths):
     """Load and process the preloaded data files"""
@@ -65,6 +70,7 @@ def load_preloaded_data(file_paths):
             st.session_state.analysis_complete = True
             
             st.success(f"✅ Dados carregados com sucesso! {len(processed_data)} escolas processadas.")
+            st.rerun()  # Force a rerun to update the UI
             return True
             
     except Exception as e:
