@@ -96,23 +96,46 @@ class Visualizations:
         else:
             data_sample = data
         
-        # Create subplots
+        # Prepare truncated names and full names for tooltips
+        def truncate_name(name, max_length=20):
+            if len(name) > max_length:
+                return name[:max_length] + "..."
+            return name
+        
+        truncated_names = [truncate_name(name) for name in data_sample['Nome da Escola']]
+        full_names = list(data_sample['Nome da Escola'])
+        
+        # Create subplots with increased vertical spacing
         fig = make_subplots(
             rows=2, cols=1,
             subplot_titles=[
                 "Salas com e sem Ar-condicionado por Escola",
                 "Performance IDEB por Escola"
             ],
-            vertical_spacing=0.1
+            vertical_spacing=0.2  # Increased spacing between titles
         )
+        
+        # Define hover colors for interactive highlighting
+        hover_colors = {
+            'success_hover': '#1e7e34',  # Darker green
+            'warning_hover': '#bd2130',  # Darker red
+            'primary_hover': '#155a85',  # Darker blue
+            'secondary_hover': '#cc5500'  # Darker orange
+        }
         
         # Classroom distribution chart
         fig.add_trace(
             go.Bar(
                 name='Salas com Ar',
-                x=data_sample['Nome da Escola'],
+                x=truncated_names,
                 y=data_sample['Salas com Ar'],
-                marker_color=self.color_palette['success']
+                marker=dict(
+                    color=self.color_palette['success'],
+                    line=dict(width=2, color='rgba(0,0,0,0)')
+                ),
+                text=full_names,
+                hovertemplate='<b>%{text}</b><br>Salas com Ar: %{y}<extra></extra>',
+                hoverlabel=dict(bgcolor=hover_colors['success_hover'], font_color='white')
             ),
             row=1, col=1
         )
@@ -120,9 +143,15 @@ class Visualizations:
         fig.add_trace(
             go.Bar(
                 name='Salas sem Ar',
-                x=data_sample['Nome da Escola'],
+                x=truncated_names,
                 y=data_sample['Salas sem Ar'],
-                marker_color=self.color_palette['warning']
+                marker=dict(
+                    color=self.color_palette['warning'],
+                    line=dict(width=2, color='rgba(0,0,0,0)')
+                ),
+                text=full_names,
+                hovertemplate='<b>%{text}</b><br>Salas sem Ar: %{y}<extra></extra>',
+                hoverlabel=dict(bgcolor=hover_colors['warning_hover'], font_color='white')
             ),
             row=1, col=1
         )
@@ -132,11 +161,22 @@ class Visualizations:
             fig.add_trace(
                 go.Scatter(
                     name='IDEB Iniciais',
-                    x=data_sample['Nome da Escola'],
+                    x=truncated_names,
                     y=data_sample['IDEB Iniciais'],
                     mode='markers+lines',
-                    marker_color=self.color_palette['primary'],
-                    line=dict(dash='dot')
+                    marker=dict(
+                        color=self.color_palette['primary'],
+                        size=8,
+                        line=dict(width=2, color='white')
+                    ),
+                    line=dict(
+                        dash='dot',
+                        width=3,
+                        color=self.color_palette['primary']
+                    ),
+                    text=full_names,
+                    hovertemplate='<b>%{text}</b><br>IDEB Iniciais: %{y:.1f}<extra></extra>',
+                    hoverlabel=dict(bgcolor=hover_colors['primary_hover'], font_color='white')
                 ),
                 row=2, col=1
             )
@@ -145,23 +185,69 @@ class Visualizations:
             fig.add_trace(
                 go.Scatter(
                     name='IDEB Finais',
-                    x=data_sample['Nome da Escola'],
+                    x=truncated_names,
                     y=data_sample['IDEB Finais'],
                     mode='markers+lines',
-                    marker_color=self.color_palette['secondary'],
-                    line=dict(dash='dash')
+                    marker=dict(
+                        color=self.color_palette['secondary'],
+                        size=8,
+                        line=dict(width=2, color='white')
+                    ),
+                    line=dict(
+                        dash='dash',
+                        width=3,
+                        color=self.color_palette['secondary']
+                    ),
+                    text=full_names,
+                    hovertemplate='<b>%{text}</b><br>IDEB Finais: %{y:.1f}<extra></extra>',
+                    hoverlabel=dict(bgcolor=hover_colors['secondary_hover'], font_color='white')
                 ),
                 row=2, col=1
             )
         
-        # Update layout
+        # Update layout with interactive features
         fig.update_xaxes(tickangle=45)
         fig.update_layout(
-            height=800,
+            height=900,  # Increased height to accommodate better spacing
             barmode='stack',
             title_text="Análise Comparativa por Escola",
-            showlegend=True
+            showlegend=True,
+            # Add hover interactions
+            hovermode='closest',
+            # Improved styling
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Arial, sans-serif", size=12),
+            margin=dict(l=60, r=60, t=120, b=100)  # Better margins for titles
         )
+        
+        # Style the subplot titles with better spacing
+        fig.update_annotations(
+            font_size=14,
+            font_color="#2c3e50"
+        )
+        
+        # Add shadow/glow effect on hover using update_traces
+        fig.update_traces(
+            selector=dict(type='bar'),
+            marker_line_width=0,
+            hoverlabel=dict(
+                bordercolor="white",
+                font_size=12
+            )
+        )
+        
+        fig.update_traces(
+            selector=dict(type='scatter'),
+            hoverlabel=dict(
+                bordercolor="white",
+                font_size=12
+            )
+        )
+        
+        # Grid styling for better readability
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
         
         return fig
     
