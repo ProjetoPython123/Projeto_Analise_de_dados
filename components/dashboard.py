@@ -183,10 +183,7 @@ def render_correlation_tab(filtered_data, stats_analyzer, viz):
         
         with col2:
             if visualization_type == "📈 Gráfico de Correlação":
-                # Enhanced correlation scatter plot
-                fig_scatter = viz.create_correlation_scatter_plot(filtered_data, show_correlation_charts=True)
-                if fig_scatter:
-                    st.plotly_chart(fig_scatter, use_container_width=True)
+                st.info("📊 Gráfico de correlação removido conforme solicitado.")
             
             elif visualization_type == "📊 Análise por Categorias":
                 # Alternative box plot analysis
