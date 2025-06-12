@@ -112,7 +112,7 @@ class Visualizations:
                 "Salas com e sem Ar-condicionado por Escola",
                 "Performance IDEB por Escola"
             ],
-            vertical_spacing=0.2  # Increased spacing between titles
+            vertical_spacing=0.35  # Significantly increased spacing between graphs
         )
         
         # Define hover colors for interactive highlighting
@@ -134,6 +134,7 @@ class Visualizations:
                     line=dict(width=2, color='rgba(0,0,0,0)')
                 ),
                 text=full_names,
+                textposition='none',  # Remove text inside bars
                 hovertemplate='<b>%{text}</b><br>Salas com Ar: %{y}<extra></extra>',
                 hoverlabel=dict(bgcolor=hover_colors['success_hover'], font_color='white')
             ),
@@ -150,6 +151,7 @@ class Visualizations:
                     line=dict(width=2, color='rgba(0,0,0,0)')
                 ),
                 text=full_names,
+                textposition='none',  # Remove text inside bars
                 hovertemplate='<b>%{text}</b><br>Salas sem Ar: %{y}<extra></extra>',
                 hoverlabel=dict(bgcolor=hover_colors['warning_hover'], font_color='white')
             ),
@@ -208,7 +210,7 @@ class Visualizations:
         # Update layout with interactive features
         fig.update_xaxes(tickangle=45)
         fig.update_layout(
-            height=900,  # Increased height to accommodate better spacing
+            height=1000,  # Increased height to accommodate more spacing
             barmode='stack',
             title_text="Análise Comparativa por Escola",
             showlegend=True,
@@ -221,10 +223,11 @@ class Visualizations:
             margin=dict(l=60, r=60, t=120, b=100)  # Better margins for titles
         )
         
-        # Style the subplot titles with better spacing
+        # Style the subplot titles with proper font and color
         fig.update_annotations(
-            font_size=14,
-            font_color="#2c3e50"
+            font_size=16,
+            font_color="#1f77b4",  # Using primary color from palette
+            font_family="Arial, sans-serif"
         )
         
         # Add shadow/glow effect on hover using update_traces
