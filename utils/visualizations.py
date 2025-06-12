@@ -254,8 +254,123 @@ class Visualizations:
         
         return fig
     
-    def create_correlation_scatter_plot(self, data):
-        """Create scatter plot showing correlation between AC and IDEB"""
+    def create_correlation_scatter_plot(self, data, show_correlation_charts=True):
+        """Create scatter plot showing correlation between AC and IDEB with option to disable"""
+        
+        if data.empty or not show_correlation_charts:
+            return None
+        
+        data_viz = data.copy()
+        data_viz['Percentual_AC'] = (data_viz['Salas com Ar'] / data_viz['Total de Salas'] * 100).fillna(0)
+        
+        # Create single enhanced scatter plot
+        fig = go.Figure()
+        
+        # IDEB Iniciais scatter with trend line
+        if not data_viz['IDEB Iniciais'].dropna().empty:
+            # Filter valid data
+            valid_data = data_viz.dropna(subset=['IDEB Iniciais', 'Percentual_AC'])
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=valid_data['Percentual_AC'],
+                    y=valid_data['IDEB Iniciais'],
+                    mode='markers',
+                    name='IDEB Anos Iniciais',
+                    marker=dict(
+                        color=self.color_palette['primary'],
+                        size=10,
+                        opacity=0.7,
+                        line=dict(width=1, color='white')
+                    ),
+                    text=valid_data['Nome da Escola'],
+                    hovertemplate='<b>%{text}</b><br>Climatização: %{x:.1f}%<br>IDEB Iniciais: %{y:.1f}<extra></extra>'
+                )
+            )
+            
+            # Add trend line for IDEB Iniciais
+            if len(valid_data) > 1:
+                z = np.polyfit(valid_data['Percentual_AC'], valid_data['IDEB Iniciais'], 1)
+                p = np.poly1d(z)
+                x_trend = np.linspace(valid_data['Percentual_AC'].min(), valid_data['Percentual_AC'].max(), 100)
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_trend,
+                        y=p(x_trend),
+                        mode='lines',
+                        name='Tendência - Iniciais',
+                        line=dict(
+                            color=self.color_palette['primary'],
+                            width=2,
+                            dash='dash'
+                        ),
+                        hoverinfo='skip'
+                    )
+                )
+        
+        # IDEB Finais scatter with trend line
+        if not data_viz['IDEB Finais'].dropna().empty:
+            valid_data = data_viz.dropna(subset=['IDEB Finais', 'Percentual_AC'])
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=valid_data['Percentual_AC'],
+                    y=valid_data['IDEB Finais'],
+                    mode='markers',
+                    name='IDEB Anos Finais',
+                    marker=dict(
+                        color=self.color_palette['secondary'],
+                        size=10,
+                        opacity=0.7,
+                        line=dict(width=1, color='white')
+                    ),
+                    text=valid_data['Nome da Escola'],
+                    hovertemplate='<b>%{text}</b><br>Climatização: %{x:.1f}%<br>IDEB Finais: %{y:.1f}<extra></extra>'
+                )
+            )
+            
+            # Add trend line for IDEB Finais
+            if len(valid_data) > 1:
+                z = np.polyfit(valid_data['Percentual_AC'], valid_data['IDEB Finais'], 1)
+                p = np.poly1d(z)
+                x_trend = np.linspace(valid_data['Percentual_AC'].min(), valid_data['Percentual_AC'].max(), 100)
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_trend,
+                        y=p(x_trend),
+                        mode='lines',
+                        name='Tendência - Finais',
+                        line=dict(
+                            color=self.color_palette['secondary'],
+                            width=2,
+                            dash='dash'
+                        ),
+                        hoverinfo='skip'
+                    )
+                )
+        
+        fig.update_layout(
+            title="Análise de Correlação: Climatização vs Performance IDEB",
+            xaxis_title="Percentual de Climatização (%)",
+            yaxis_title="Taxa de Aprovação IDEB",
+            height=500,
+            hovermode='closest',
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Arial, sans-serif", size=12),
+            showlegend=True
+        )
+        
+        # Add grid
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)')
+        
+        return fig
+    
+    def create_alternative_analysis_chart(self, data):
+        """Create alternative analysis chart instead of correlation plots"""
         
         if data.empty:
             return None
@@ -263,53 +378,57 @@ class Visualizations:
         data_viz = data.copy()
         data_viz['Percentual_AC'] = (data_viz['Salas com Ar'] / data_viz['Total de Salas'] * 100).fillna(0)
         
-        # Create subplot for both IDEB levels
-        fig = make_subplots(
-            rows=1, cols=2,
-            subplot_titles=['IDEB Iniciais vs Climatização', 'IDEB Finais vs Climatização']
+        # Create categories for analysis
+        data_viz['AC_Category'] = pd.cut(
+            data_viz['Percentual_AC'],
+            bins=[0, 25, 50, 75, 100],
+            labels=['Baixa\n(0-25%)', 'Média-Baixa\n(25-50%)', 'Média-Alta\n(50-75%)', 'Alta\n(75-100%)'],
+            include_lowest=True
         )
         
-        # IDEB Iniciais scatter
+        # Create box plot comparing IDEB by AC category
+        fig = make_subplots(
+            rows=1, cols=2,
+            subplot_titles=['IDEB Iniciais por Nível de Climatização', 'IDEB Finais por Nível de Climatização']
+        )
+        
+        # IDEB Iniciais by AC category
         if not data_viz['IDEB Iniciais'].dropna().empty:
-            fig.add_trace(
-                go.Scatter(
-                    x=data_viz['Percentual_AC'],
-                    y=data_viz['IDEB Iniciais'],
-                    mode='markers',
-                    name='Anos Iniciais',
-                    marker=dict(
-                        color=self.color_palette['primary'],
-                        size=8,
-                        opacity=0.7
-                    ),
-                    text=data_viz['Nome da Escola'],
-                    hovertemplate='<b>%{text}</b><br>Climatização: %{x:.1f}%<br>IDEB: %{y:.1f}<extra></extra>'
-                ),
-                row=1, col=1
-            )
+            for i, category in enumerate(['Baixa\n(0-25%)', 'Média-Baixa\n(25-50%)', 'Média-Alta\n(50-75%)', 'Alta\n(75-100%)']):
+                category_data = data_viz[data_viz['AC_Category'] == category]['IDEB Iniciais'].dropna()
+                if not category_data.empty:
+                    fig.add_trace(
+                        go.Box(
+                            y=category_data,
+                            name=category,
+                            marker_color=px.colors.qualitative.Set3[i],
+                            showlegend=False
+                        ),
+                        row=1, col=1
+                    )
         
-        # IDEB Finais scatter
+        # IDEB Finais by AC category
         if not data_viz['IDEB Finais'].dropna().empty:
-            fig.add_trace(
-                go.Scatter(
-                    x=data_viz['Percentual_AC'],
-                    y=data_viz['IDEB Finais'],
-                    mode='markers',
-                    name='Anos Finais',
-                    marker=dict(
-                        color=self.color_palette['secondary'],
-                        size=8,
-                        opacity=0.7
-                    ),
-                    text=data_viz['Nome da Escola'],
-                    hovertemplate='<b>%{text}</b><br>Climatização: %{x:.1f}%<br>IDEB: %{y:.1f}<extra></extra>'
-                ),
-                row=1, col=2
-            )
+            for i, category in enumerate(['Baixa\n(0-25%)', 'Média-Baixa\n(25-50%)', 'Média-Alta\n(50-75%)', 'Alta\n(75-100%)']):
+                category_data = data_viz[data_viz['AC_Category'] == category]['IDEB Finais'].dropna()
+                if not category_data.empty:
+                    fig.add_trace(
+                        go.Box(
+                            y=category_data,
+                            name=category,
+                            marker_color=px.colors.qualitative.Set3[i],
+                            showlegend=False
+                        ),
+                        row=1, col=2
+                    )
         
-        fig.update_xaxes(title_text="Percentual de Climatização (%)")
+        fig.update_layout(
+            title="Análise de Performance IDEB por Nível de Climatização",
+            height=500,
+            showlegend=False
+        )
+        
         fig.update_yaxes(title_text="Taxa de Aprovação IDEB")
-        fig.update_layout(height=500, title_text="Correlação: Climatização vs Performance IDEB")
         
         return fig
     

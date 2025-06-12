@@ -159,11 +159,18 @@ def render_correlation_tab(filtered_data, stats_analyzer, viz):
     
     st.subheader("Análise de Correlação")
     
+    # Add option to choose visualization type
+    visualization_type = st.radio(
+        "Escolha o tipo de visualização:",
+        ["📊 Análise por Categorias", "📈 Gráfico de Correlação", "🔥 Mapa de Calor"],
+        horizontal=True
+    )
+    
     # Calculate correlations
     correlation_results = stats_analyzer.analyze_correlations(filtered_data)
     
     if correlation_results:
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1, 2])
         
         with col1:
             st.markdown("#### 🔗 Correlações Identificadas")
@@ -175,15 +182,58 @@ def render_correlation_tab(filtered_data, stats_analyzer, viz):
                 st.write("---")
         
         with col2:
-            # Correlation scatter plot
-            fig_scatter = viz.create_correlation_scatter_plot(filtered_data)
-            if fig_scatter:
-                st.plotly_chart(fig_scatter, use_container_width=True)
+            if visualization_type == "📈 Gráfico de Correlação":
+                # Enhanced correlation scatter plot
+                fig_scatter = viz.create_correlation_scatter_plot(filtered_data, show_correlation_charts=True)
+                if fig_scatter:
+                    st.plotly_chart(fig_scatter, use_container_width=True)
+            
+            elif visualization_type == "📊 Análise por Categorias":
+                # Alternative box plot analysis
+                fig_alternative = viz.create_alternative_analysis_chart(filtered_data)
+                if fig_alternative:
+                    st.plotly_chart(fig_alternative, use_container_width=True)
+            
+            elif visualization_type == "🔥 Mapa de Calor":
+                # Correlation heatmap
+                fig_heatmap = viz.create_correlation_heatmap(filtered_data)
+                if fig_heatmap:
+                    st.plotly_chart(fig_heatmap, use_container_width=True)
     
-    # Correlation heatmap
-    fig_heatmap = viz.create_correlation_heatmap(filtered_data)
-    if fig_heatmap:
-        st.plotly_chart(fig_heatmap, use_container_width=True)
+    # Additional insights section
+    st.markdown("---")
+    st.markdown("#### 💡 Insights da Análise")
+    
+    if correlation_results:
+        # Find strongest correlation
+        strongest_corr = max(correlation_results, key=lambda x: abs(x['correlation']))
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric(
+                "Correlação Mais Forte",
+                f"{strongest_corr['correlation']:.3f}",
+                delta=strongest_corr['variables']
+            )
+        
+        with col2:
+            # Count significant correlations
+            significant_count = sum(1 for corr in correlation_results if corr['p_value'] < 0.05)
+            st.metric(
+                "Correlações Significativas",
+                significant_count,
+                delta=f"de {len(correlation_results)} total"
+            )
+        
+        with col3:
+            # Average correlation strength
+            avg_correlation = np.mean([abs(corr['correlation']) for corr in correlation_results])
+            st.metric(
+                "Força Média das Correlações",
+                f"{avg_correlation:.3f}",
+                delta="Valor absoluto"
+            )
 
 def render_distribution_tab(filtered_data, viz):
     """Render distribution analysis"""
