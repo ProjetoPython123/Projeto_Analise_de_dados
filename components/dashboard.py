@@ -16,10 +16,9 @@ def render_dashboard(filtered_data, full_data):
     render_summary_stats(filtered_data, full_data)
     
     # Detailed analysis tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Visão Geral", 
         "🔍 Análise Detalhada", 
-        "📈 Correlações", 
         "🗺️ Distribuição", 
         "📋 Dados Brutos"
     ])
@@ -31,12 +30,9 @@ def render_dashboard(filtered_data, full_data):
         render_detailed_analysis_tab(filtered_data, stats_analyzer, viz)
     
     with tab3:
-        render_correlation_tab(filtered_data, stats_analyzer, viz)
-    
-    with tab4:
         render_distribution_tab(filtered_data, viz)
     
-    with tab5:
+    with tab4:
         render_raw_data_tab(filtered_data)
 
 def render_summary_stats(filtered_data, full_data):
@@ -154,66 +150,7 @@ def render_detailed_analysis_tab(filtered_data, stats_analyzer, viz):
             for stat, value in ideb_stats.items():
                 st.metric(f"IDEB Iniciais - {stat}", f"{value:.2f}")
 
-def render_correlation_tab(filtered_data, stats_analyzer, viz):
-    """Render correlation analysis"""
-    
-    st.subheader("Análise de Correlação")
-    
-    # Calculate correlations
-    correlation_results = stats_analyzer.analyze_correlations(filtered_data)
-    
-    if correlation_results:
-        col1, col2 = st.columns([1, 2])
-        
-        with col1:
-            st.markdown("#### 🔗 Correlações Identificadas")
-            for correlation in correlation_results:
-                st.write(f"**{correlation['variables']}**")
-                st.write(f"Correlação: {correlation['correlation']:.3f}")
-                st.write(f"P-valor: {correlation['p_value']:.3f}")
-                st.write(f"Significância: {correlation['significance']}")
-                st.write("---")
-        
-        with col2:
-            # Alternative box plot analysis
-            fig_alternative = viz.create_alternative_analysis_chart(filtered_data)
-            if fig_alternative:
-                st.plotly_chart(fig_alternative, use_container_width=True)
-    
-    # Additional insights section
-    st.markdown("---")
-    st.markdown("#### 💡 Insights da Análise")
-    
-    if correlation_results:
-        # Find strongest correlation
-        strongest_corr = max(correlation_results, key=lambda x: abs(x['correlation']))
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric(
-                "Correlação Mais Forte",
-                f"{strongest_corr['correlation']:.3f}",
-                delta=strongest_corr['variables']
-            )
-        
-        with col2:
-            # Count significant correlations
-            significant_count = sum(1 for corr in correlation_results if corr['p_value'] < 0.05)
-            st.metric(
-                "Correlações Significativas",
-                significant_count,
-                delta=f"de {len(correlation_results)} total"
-            )
-        
-        with col3:
-            # Average correlation strength
-            avg_correlation = np.mean([abs(corr['correlation']) for corr in correlation_results])
-            st.metric(
-                "Força Média das Correlações",
-                f"{avg_correlation:.3f}",
-                delta="Valor absoluto"
-            )
+
 
 def render_distribution_tab(filtered_data, viz):
     """Render distribution analysis"""
