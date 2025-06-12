@@ -159,13 +159,6 @@ def render_correlation_tab(filtered_data, stats_analyzer, viz):
     
     st.subheader("Análise de Correlação")
     
-    # Add option to choose visualization type
-    visualization_type = st.radio(
-        "Escolha o tipo de visualização:",
-        ["📊 Análise por Categorias", "📈 Gráfico de Correlação", "🔥 Mapa de Calor"],
-        horizontal=True
-    )
-    
     # Calculate correlations
     correlation_results = stats_analyzer.analyze_correlations(filtered_data)
     
@@ -182,20 +175,10 @@ def render_correlation_tab(filtered_data, stats_analyzer, viz):
                 st.write("---")
         
         with col2:
-            if visualization_type == "📈 Gráfico de Correlação":
-                st.info("📊 Gráfico de correlação removido conforme solicitado.")
-            
-            elif visualization_type == "📊 Análise por Categorias":
-                # Alternative box plot analysis
-                fig_alternative = viz.create_alternative_analysis_chart(filtered_data)
-                if fig_alternative:
-                    st.plotly_chart(fig_alternative, use_container_width=True)
-            
-            elif visualization_type == "🔥 Mapa de Calor":
-                # Correlation heatmap
-                fig_heatmap = viz.create_correlation_heatmap(filtered_data)
-                if fig_heatmap:
-                    st.plotly_chart(fig_heatmap, use_container_width=True)
+            # Alternative box plot analysis
+            fig_alternative = viz.create_alternative_analysis_chart(filtered_data)
+            if fig_alternative:
+                st.plotly_chart(fig_alternative, use_container_width=True)
     
     # Additional insights section
     st.markdown("---")

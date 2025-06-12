@@ -319,44 +319,7 @@ class Visualizations:
         
         return fig
     
-    def create_correlation_heatmap(self, data):
-        """Create correlation heatmap for numerical variables"""
-        
-        if data.empty:
-            return None
-        
-        data_viz = data.copy()
-        data_viz['Percentual_AC'] = (data_viz['Salas com Ar'] / data_viz['Total de Salas'] * 100).fillna(0)
-        
-        # Select numerical columns
-        numerical_cols = ['Total de Salas', 'Salas com Ar', 'Percentual_AC']
-        
-        # Add IDEB columns if they have data
-        if not data_viz['IDEB Iniciais'].dropna().empty:
-            numerical_cols.append('IDEB Iniciais')
-        if not data_viz['IDEB Finais'].dropna().empty:
-            numerical_cols.append('IDEB Finais')
-        
-        if len(numerical_cols) < 2:
-            return None
-        
-        # Calculate correlation matrix
-        corr_matrix = data_viz[numerical_cols].corr()
-        
-        # Create heatmap
-        fig = px.imshow(
-            corr_matrix,
-            text_auto=True,
-            aspect="auto",
-            title="Matriz de Correlação entre Variáveis",
-            color_continuous_scale='RdBu',
-            zmin=-1,
-            zmax=1
-        )
-        
-        fig.update_layout(height=500)
-        
-        return fig
+    
     
     def create_neighborhood_distribution(self, data):
         """Create neighborhood distribution chart"""
